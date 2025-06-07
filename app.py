@@ -117,16 +117,16 @@ def send_message():
         }
         
         payload = {
-            'model': 'claude-3-sonnet-20240229',
-            'max_tokens': 800,
-            'messages': [
-                {
-                    'role': 'user', 
-                    'content': f"Sei un assistente AI specializzato nella gestione condominiale. Rispondi sempre in italiano in modo cortese e professionale. Domanda del condomino: {message}"
-                }
-            ]
+    'model': 'claude-3-sonnet-20240229',
+    'max_tokens': 800,
+    'messages': [
+        {
+            'role': 'user',
+            'content': message
         }
-        
+    ],
+    'system': 'Sei un assistente AI specializzato nella gestione condominiale. Rispondi sempre in italiano in modo cortese e professionale alle domande dei condomini su regolamenti, orari, spese e questioni amministrative.'
+}        
         response = requests.post(
             'https://api.anthropic.com/v1/messages',
             headers=headers, 
