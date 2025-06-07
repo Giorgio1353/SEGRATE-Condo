@@ -1,21 +1,19 @@
-import os
-from flask import Flask, render_template_string
-
+from flask import Flask
 app = Flask(__name__)
-
-# Leggi il contenuto di index.html
-def get_html_content():
-    try:
-        with open('index.html', 'r', encoding='utf-8') as f:
-            return f.read()
-    except:
-        return "<h1>Errore: File index.html non trovato</h1>"
 
 @app.route('/')
 def home():
-    html_content = get_html_content()
-    return html_content
+    return '''<!DOCTYPE html>
+<html>
+<head><title>SEGR Test</title></head>
+<body>
+<h1>SEGR Condominio Smart</h1>
+<p>Sistema funzionante!</p>
+<p>URL: https://condsegrate-93e925a52f32.herokuapp.com/</p>
+</body>
+</html>'''
 
 if __name__ == '__main__':
+    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
