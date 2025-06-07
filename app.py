@@ -109,48 +109,44 @@ def send_message():
         return redirect('/')
     
     try:
-        # Anthropic Claude API
-        headers = {
-            'x-api-key': api_key,
-            'Content-Type': 'application/json',
-            'anthropic-version': '2023-06-01'
-        }
+    # Anthropic Claude API - Versione semplificata
+    headers = {
+        'x-api-key': api_key,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01'
+    }
+    
+    # Payload semplificato
+    payload = {
+        'model': 'claude-3-haiku-20240307',
+        'max_tokens': 500,
+        'messages': [
+            {
+                'role': 'user',
+                'content': f"Rispondi in italiano: {message}"
+            }
+        ]
+    }
+    
+    response = requests.post(
+        'https://api.anthropic.com/v1/messages',
+        headers=headers, 
+        json=payload, 
+        timeout=20
+    )
+    
+    print(f"Status: {response.status_code}")  # Debug
+    print(f"Response: {response.text}")       # Debug
+    
+    if response.status_code == 200:
+        result = response.json()
+        ai_response = result['content'][0]['text']
+        messages.append(f"🤖 <strong>Claude AI:</strong> {ai_response}")
+    else:
+        messages.append(f"❌ <strong>Debug:</strong> Status {response.status_code} - {response.text[:100]}")
         
-        payload = {
-    'model': 'claude-3-sonnet-20240229',
-    'max_tokens': 800,
-    'messages': [
-        {
-            'role': 'user',
-            'content': message
-        }
-    ],
-    'system': 'Sei un assistente AI specializzato nella gestione condominiale. Rispondi sempre in italiano in modo cortese e professionale alle domande dei condomini su regolamenti, orari, spese e questioni amministrative.'
-}        
-        response = requests.post(
-            'https://api.anthropic.com/v1/messages',
-            headers=headers, 
-            json=payload, 
-            timeout=25
-        )
-        
-        if response.status_code == 200:
-            result = response.json()
-            ai_response = result['content'][0]['text']
-            messages.append(f"🤖 <strong>Claude AI:</strong> {ai_response}")
-        elif response.status_code == 401:
-            messages.append("❌ <strong>Errore:</strong> API Key non valida. Verifica la chiave Anthropic.")
-        elif response.status_code == 429:
-            messages.append("❌ <strong>Errore:</strong> Limite rate API raggiunto. Riprova tra poco.")
-        elif response.status_code == 402:
-            messages.append("❌ <strong>Errore:</strong> Crediti API esauriti. Ricarica il tuo account Anthropic.")
-        else:
-            messages.append(f"❌ <strong>Errore API:</strong> Codice {response.status_code}")
-            
-    except requests.exceptions.Timeout:
-        messages.append("❌ <strong>Errore:</strong> Timeout - riprova tra poco.")
-    except Exception as e:
-        messages.append(f"❌ <strong>Errore:</strong> {str(e)}")
+except Exception as e:
+    messages.append(f"❌ <strong>Errore:</strong> {str(e)}")        
     
     # Mantieni solo gli ultimi 20 messaggi
     if len(messages) > 20:
