@@ -32,7 +32,6 @@ def get_html():
         input[type="text"] {{ width: 75%; padding: 12px; border: 2px solid #ddd; font-size: 16px; }}
         input[type="password"] {{ width: 75%; padding: 12px; border: 2px solid #ddd; font-size: 16px; }}
         input[type="submit"] {{ padding: 12px 25px; background: #D97835; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }}
-        input[type="submit"]:hover {{ background: #c56829; }}
         .msg {{ margin: 8px 0; padding: 12px; border-radius: 8px; }}
         .user {{ background: #e3f2fd; border-left: 4px solid #2196F3; }}
         .ai {{ background: #f1f8e9; border-left: 4px solid #4CAF50; }}
@@ -43,47 +42,35 @@ def get_html():
     <div class="container">
         <div class="header">
             <h1>🏢 SEGR Condominio Smart</h1>
-            <p>Assistente AI per la Gestione Condominiale</p>
-            <p style="font-size: 14px;">Powered by Anthropic Claude</p>
+            <p>Assistente AI Claude</p>
         </div>
         
         <div class="status">
-            <strong>Status API Anthropic:</strong> {api_status}<br>
-            <strong>API Key:</strong> {api_display}<br>
-            <strong>Modello:</strong> Claude-3 Sonnet<br>
-            <strong>URL Sistema:</strong> https://condsegrate-93e925a52f32.herokuapp.com/
+            <strong>API Status:</strong> {api_status}<br>
+            <strong>URL:</strong> https://condsegrate-93e925a52f32.herokuapp.com/
         </div>
         
-        <h3>💬 Chat con Assistente AI Claude</h3>
+        <h3>💬 Chat AI</h3>
         <div class="chat">
             {messages_html}
         </div>
         
         <form method="POST" action="/send">
             <div class="form-row">
-                <input type="text" name="message" placeholder="Scrivi la tua domanda sul condominio..." required maxlength="400">
-                <input type="submit" value="📤 INVIA MESSAGGIO">
+                <input type="text" name="message" placeholder="Domanda..." required>
+                <input type="submit" value="📤 INVIA">
             </div>
         </form>
         
-        <hr style="margin: 30px 0;">
+        <hr>
         
-        <h3>🔑 Configurazione API Anthropic</h3>
+        <h3>🔑 API Anthropic</h3>
         <form method="POST" action="/save_api">
             <div class="form-row">
-                <input type="password" name="api_key" placeholder="API Key Anthropic (sk-ant-...)" value="">
-                <input type="submit" value="💾 SALVA API KEY">
+                <input type="password" name="api_key" placeholder="sk-ant-...">
+                <input type="submit" value="💾 SALVA">
             </div>
         </form>
-        
-        <p style="color: #666; font-size: 14px;">
-            💡 <strong>Istruzioni:</strong><br>
-            1. Ottieni API Key da: <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a><br>
-            2. Inserisci la chiave che inizia con "sk-ant-..." e clicca SALVA<br>
-            3. Scrivi una domanda e clicca INVIA MESSAGGIO<br>
-            4. Claude AI ti risponderà in italiano!<br><br>
-            🎯 <strong>Esempi domande:</strong> "Orari silenzio", "Spese condominiali", "Regolamento ascensore"
-        </p>
     </div>
 </body>
 </html>
@@ -98,59 +85,43 @@ def send_message():
     global messages
     
     message = request.form.get('message', '').strip()
-    
     if not message:
         return redirect('/')
     
     messages.append(f"👤 <strong>Tu:</strong> {message}")
     
     if not api_key:
-        messages.append("❌ <strong>Sistema:</strong> Prima configura l'API Key Anthropic!")
+        messages.append("❌ API Key mancante!")
         return redirect('/')
     
     try:
-    # Anthropic Claude API - Versione semplificata
-    headers = {
-        'x-api-key': api_key,
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01'
-    }
-    
-    # Payload semplificato
-    payload = {
-        'model': 'claude-3-haiku-20240307',
-        'max_tokens': 500,
-        'messages': [
-            {
-                'role': 'user',
-                'content': f"Rispondi in italiano: {message}"
-            }
-        ]
-    }
-    
-    response = requests.post(
-        'https://api.anthropic.com/v1/messages',
-        headers=headers, 
-        json=payload, 
-        timeout=20
-    )
-    
-    print(f"Status: {response.status_code}")  # Debug
-    print(f"Response: {response.text}")       # Debug
-    
-    if response.status_code == 200:
-        result = response.json()
-        ai_response = result['content'][0]['text']
-        messages.append(f"🤖 <strong>Claude AI:</strong> {ai_response}")
-    else:
-        messages.append(f"❌ <strong>Debug:</strong> Status {response.status_code} - {response.text[:100]}")
+        headers = {
+            'x-api-key': api_key,
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01'
+        }
         
-except Exception as e:
-    messages.append(f"❌ <strong>Errore:</strong> {str(e)}")        
+        payload = {
+            'model': 'claude-3-haiku-20240307',
+            'max_tokens': 400,
+            'messages': [{'role': 'user', 'content': message}]
+        }
+        
+        response = requests.post('https://api.anthropic.com/v1/messages', 
+                               headers=headers, json=payload, timeout=15)
+        
+        if response.status_code == 200:
+            result = response.json()
+            ai_response = result['content'][0]['text']
+            messages.append(f"🤖 <strong>Claude:</strong> {ai_response}")
+        else:
+            messages.append(f"❌ Errore: {response.status_code}")
+            
+    except Exception as e:
+        messages.append(f"❌ Errore: {str(e)}")
     
-    # Mantieni solo gli ultimi 20 messaggi
-    if len(messages) > 20:
-        messages = messages[-20:]
+    if len(messages) > 15:
+        messages = messages[-15:]
     
     return redirect('/')
 
@@ -159,18 +130,12 @@ def save_api():
     global api_key, messages
     
     new_key = request.form.get('api_key', '').strip()
-    
     if new_key:
-        if new_key.startswith('sk-ant-'):
-            api_key = new_key
-            messages.append("✅ <strong>Sistema:</strong> API Key Anthropic salvata con successo!")
-        else:
-            messages.append("❌ <strong>Errore:</strong> API Key non valida. Deve iniziare con 'sk-ant-'")
-    else:
-        messages.append("❌ <strong>Sistema:</strong> API Key vuota!")
+        api_key = new_key
+        messages.append("✅ API Key salvata!")
     
     return redirect('/')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port)
